@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/test.sh | bash
+# wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/cloudpanel_w_docker.sh | bash
 
 # Update package list and upgrade installed packages
 apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove -y

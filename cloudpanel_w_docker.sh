@@ -9,7 +9,8 @@ apt-get update && sudo apt-get upgrade -y && sudo apt-get autoremove -y
 apt-get install sudo curl -y
 
 # Modify SSH configuration file to disable password authentication and restart SSH service
-sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && sudo service ssh restart
+sed -i 's/^.*PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && sudo service ssh restart
+
 
 # Download Docker installation script and execute it
 curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh

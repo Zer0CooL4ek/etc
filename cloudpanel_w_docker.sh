@@ -45,24 +45,25 @@ sh -c 'if ! grep -q "clp-update" /etc/crontab; then printf "\n# Update CloudPane
 echo -e "${GREEN}Cleaning cache and temporary files${NC}"
 apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 || { echo -e "${RED}Error: Failed to clean cache and temporary files${NC}"; exit 1; }
 
-echo "-= Checking current SSH port and changing it to 2224 if necessary =-"
+# Check current SSH port and changing it to 2224 if necessary
+echo "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
     sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config > /dev/null 2>&1
-    echo "SSH port has been changed to 2224"
+    echo "${GREEN}SSH port has been changed to 2224${NC}"
 else
-    echo "SSH port is already set to 2224"
+    echo "${GREEN}SSH port is already set to 2224${NC}"
 fi
 
 # Modify SSH configuration file to disable password authentication and restart SSH service
-echo "Modifying SSH configuration file to disable password authentication"
+echo "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
 if grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
     sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config > /dev/null 2>&1
-    echo "PasswordAuthentication has been changed to no"
+    echo "${GREEN}PasswordAuthentication has been changed to no${NC}"
 else
-    echo "PasswordAuthentication is already set to no"
+    echo "${GREEN}PasswordAuthentication is already set to no${NC}"
 fi
 
 # Restart SSH service
-echo "Restarting SSH service"
+echo "${GREEN}Restarting SSH service${NC}"
 service ssh restart > /dev/null 2>&1 || { echo -e "${RED}Error: Failed to restart SSH service${NC}"; exit 1; }
 

@@ -19,27 +19,7 @@ else
     echo "PasswordAuthentication is already set to no"
 fi
 
-# -= Downloading Docker installation script and executing it =-
-echo "-= Downloading Docker installation script and executing it =-"
-curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
 
-# -= Adding current user to docker group =-
-echo "-= Adding current user to docker group =-"
-usermod -aG docker $USER
-
-# -= Downloading latest version of Docker Compose =-
-echo "-= Downloading latest version of Docker Compose =-"
-curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-
-# -= Changing permissions of Docker Compose file to make it executable =-
-echo "-= Changing permissions of Docker Compose file to make it executable =-"
-chmod +x /usr/local/bin/docker-compose
-
-# -= Downloading CloudPanel installation script, verifying its checksum, and executing it with specified DB_ENGINE =-
-echo "-= Downloading CloudPanel installation script, verifying its checksum, and executing it with specified DB_ENGINE =-"
-curl -sS https://installer.cloudpanel.io/ce/v2/install.sh -o install.sh; \
-echo "3c30168958264ced81ca9b58dbc55b4d28585d9066b9da085f2b130ae91c50f6 install.sh" | \
-sha256sum -c && sudo DB_ENGINE=MARIADB_10.11 bash install.sh
 
 # -= Adding crontab jobs for daily updates of CloudPanel, system, and Docker Compose (in one command) =-
 echo "-= Adding crontab jobs for daily updates of CloudPanel, system, and Docker Compose (in one command) =-"

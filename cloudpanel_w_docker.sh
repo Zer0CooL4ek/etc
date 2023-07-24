@@ -10,6 +10,9 @@ apt-get install sudo curl -y
 
 # Modify SSH configuration file to disable password authentication and restart SSH service
 sed -i 's/^.*PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && sudo service ssh restart
+#2
+sudo sed -i 's/.*PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config && sudo service ssh restart
+
 
 
 # Download Docker installation script and execute it

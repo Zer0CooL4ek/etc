@@ -1,6 +1,9 @@
 #!/bin/bash
+
 #
 # wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/cloudpanel_w_docker.sh | bash
+#
+
 # Define color variables
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -35,6 +38,42 @@ PROGRESS_PID=$!
 apt install sudo curl -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Sudo and curl packages installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install sudo and curl"; exit 1; }
 kill $PROGRESS_PID
 
+# Download Docker installation script and execute it
+echo -e "${GREEN}Downloading Docker installation script and executing it${NC}"
+progress &
+PROGRESS_PID=$!
+curl -fsSL https://get.docker.com -o get-docker.sh > /dev/null 2>&1 && sudo sh get-docker.sh > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Docker installation script downloaded and executed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to download and execute Docker installation script"; exit 1; }
+kill $PROGRESS_PID
+
+# Add current user to docker group
+echo -e "${GREEN}Adding current user to docker group${NC}"
+progress &
+PROGRESS_PID=$!
+usermod -aG docker $USER > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Current user added to docker group" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to add current user to docker group"; exit 1; }
+kill $PROGRESS_PID
+
+# Download latest version of Docker Compose
+echo -e "${GREEN}Downloading latest version of Docker Compose${NC}"
+progress &
+PROGRESS_PID=$!
+curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Latest version of Docker Compose downloaded" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to download latest version of Docker Compose"; exit 1; }
+kill $PROGRESS_PID
+
+# Change permissions of Docker Compose file to make it executable
+echo -e "${GREEN}Changing permissions of Docker Compose file to make it executable${NC}"
+progress &
+PROGRESS_PID=$!
+chmod +x /usr/local/bin/docker-compose > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Permissions of Docker Compose file changed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to change permissions of Docker Compose file"; exit 1; }
+kill $PROGRESS_PID
+
+# Download CloudPanel installation script, verify its checksum, and execute it
+echo -e "${GREEN}Downloading CloudPanel installation script, verifying its checksum, and executing it${NC}"
+progress &
+PROGRESS_PID=$!
+curl -sS https://installer.cloudpanel.io/ce/v2/install.sh -o install.sh > /dev/null 2>&1 && \
+echo "3c30168958264ced81ca9b58dbc55b4d28585d9066b9da085f2b130ae91c50f6 install.sh" | \
+sha256sum -c > /dev/null 2>&1 && sudo DB_ENGINE=MARIADB_10.11 bash install.sh > /dev/null 2>&1 && echo -e "\r${CHECKMARK} CloudPanel installation script downloaded, verified, and executed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to download, verify, and execute CloudPanel installation script"; exit 1; }
+kill $PROGRESS_PID
 # Add crontab jobs for daily updates of CloudPanel, system, and Docker Compose (in one command)
 echo -e "${GREEN}Adding crontab jobs for daily updates of CloudPanel, system, and Docker Compose (in one command)${NC}"
 progress &
@@ -49,6 +88,7 @@ PROGRESS_PID=$!
 apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Cache and temporary files cleaned" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to clean cache and temporary files"; exit 1; }
 kill $PROGRESS_PID
 
+# Check current SSH port and changing it to 2224 if necessary
 echo -e "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
     sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config

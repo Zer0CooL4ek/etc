@@ -50,7 +50,7 @@ apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 && echo -e "\r${CHE
 kill $PROGRESS_PID
 
 # Check current SSH port and changing it to 2224 if necessary
-echo "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
+echo -e "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
 progress &
 PROGRESS_PID=$!
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
@@ -62,7 +62,7 @@ fi
 kill $PROGRESS_PID
 
 # Modify SSH configuration file to disable password authentication
-echo "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
+echo -e "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
 progress &
 PROGRESS_PID=$!
 if grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
@@ -74,7 +74,7 @@ fi
 kill $PROGRESS_PID
 
 # Restart SSH service
-echo "${GREEN}Restarting SSH service${NC}"
+echo -e "${GREEN}Restarting SSH service${NC}"
 progress &
 PROGRESS_PID=$!
 service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }

@@ -48,7 +48,7 @@ PROGRESS_PID=$!
 apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Cache and temporary files cleaned" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to clean cache and temporary files"; exit 1; }
 kill $PROGRESS_PID
 
-echo -e "${YELLOW}-= Checking current SSH port and changing it to 2224 if necessary =-${NC}"
+echo -e "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
     sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} SSH port has been changed to 2224"
@@ -66,5 +66,5 @@ else
 fi
 
 # Restart SSH service
-echo -e "${YELLOW}Restarting SSH service${NC}"
+echo -e "${GREEN}Restarting SSH service${NC}"
 service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }

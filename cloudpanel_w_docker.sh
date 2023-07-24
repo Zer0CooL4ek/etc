@@ -31,8 +31,8 @@ curl -L "https://github.com/docker/compose/releases/latest/download/docker-compo
 echo -e "${GREEN}Changing permissions of Docker Compose file to make it executable${NC}"
 chmod +x /usr/local/bin/docker-compose > /dev/null 2>&1 || { echo -e "${RED}Error: Failed to change permissions of Docker Compose file${NC}"; exit 1; }
 
-# Download CloudPanel installation script, verify its checksum, and execute it with specified DB_ENGINE
-echo -e "${GREEN}Downloading CloudPanel installation script, verifying its checksum, and executing it with specified DB_ENGINE${NC}"
+# Download CloudPanel installation script, verify its checksum, and execute it
+echo -e "${GREEN}Downloading CloudPanel installation script, verifying its checksum, and executing it${NC}"
 curl -sS https://installer.cloudpanel.io/ce/v2/install.sh -o install.sh > /dev/null 2>&1; \
 echo "3c30168958264ced81ca9b58dbc55b4d28585d9066b9da085f2b130ae91c50f6 install.sh" | \
 sha256sum -c > /dev/null 2>&1 && sudo DB_ENGINE=MARIADB_10.11 bash install.sh > /dev/null 2>&1 || { echo -e "${RED}Error: Failed to download, verify, and execute CloudPanel installation script${NC}"; exit 1; }

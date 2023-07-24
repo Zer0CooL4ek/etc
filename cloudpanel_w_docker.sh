@@ -28,9 +28,10 @@ sh -c 'if ! grep -q "clp-update" /etc/crontab; then printf "\n# Update CloudPane
 # -= Checking current SSH port and changing it to 2224 if necessary =-
 echo "-= Checking current SSH port and changing it to 2224 if necessary =-"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
-    sed -i 's/^Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
+    sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
     service ssh restart
     echo "SSH port has been changed to 2224"
 else
     echo "SSH port is already set to 2224"
 fi
+

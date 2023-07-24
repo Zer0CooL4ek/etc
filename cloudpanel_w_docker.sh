@@ -49,7 +49,7 @@ apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 || { echo -e "${RED
 echo "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
     sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config > /dev/null 2>&1
-    echo "${GREEN}SSH port has been changed to 2224${NC}"
+    echo "${YELLOW}SSH port has been changed to 2224${NC}"
 else
     echo "${GREEN}SSH port is already set to 2224${NC}"
 fi
@@ -58,7 +58,7 @@ fi
 echo "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
 if grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
     sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config > /dev/null 2>&1
-    echo "${GREEN}PasswordAuthentication has been changed to no${NC}"
+    echo "${YELLOW}PasswordAuthentication has been changed to no${NC}"
 else
     echo "${GREEN}PasswordAuthentication is already set to no${NC}"
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-#
+##
 # wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/cloudpanel_w_docker.sh | bash
 # Define color variables
 GREEN='\033[0;32m'

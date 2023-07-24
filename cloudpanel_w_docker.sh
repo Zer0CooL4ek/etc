@@ -49,33 +49,23 @@ PROGRESS_PID=$!
 apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Cache and temporary files cleaned" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to clean cache and temporary files"; exit 1; }
 kill $PROGRESS_PID
 
-# Check current SSH port and changing it to 2224 if necessary
-echo -e "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
-progress &
-PROGRESS_PID=$!
+echo -e "${YELLOW}-= Checking current SSH port and changing it to 2224 if necessary =-${NC}"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
-    sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config > /dev/null 2>&1
-    echo -e "\r${CHECKMARK} SSH port changed to 2224"
+    sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
+    echo -e "${GREEN}SSH port has been changed to 2224${NC}"
 else
-    echo -e "\r${MINUS} SSH port already set to 2224"
+    echo -e "${GREEN}SSH port is already set to 2224${NC}"
 fi
-kill $PROGRESS_PID
 
-# Modify SSH configuration file to disable password authentication
-echo -e "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
-progress &
-PROGRESS_PID=$!
+# Modify SSH configuration file to disable password authentication and restart SSH service
+echo -e "${YELLOW}Modifying SSH configuration file to disable password authentication${NC}"
 if grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
-    sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config > /dev/null 2>&1
-    echo -e "\r${CHECKMARK} PasswordAuthentication changed to no"
+    sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+    echo -e "${GREEN}PasswordAuthentication has been changed to no${NC}"
 else
-    echo -e "\r${MINUS} PasswordAuthentication already set to no"
+    echo -e "${GREEN}PasswordAuthentication is already set to no${NC}"
 fi
-kill $PROGRESS_PID
 
 # Restart SSH service
-echo -e "${GREEN}Restarting SSH service${NC}"
-progress &
-PROGRESS_PID=$!
-service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }
-kill $PROGRESS_PID
+echo -e "${YELLOW}Restarting SSH service${NC}"
+service ssh restart || { echo -e "${RED}Error: Failed to restart SSH service${NC}"; exit 1; }

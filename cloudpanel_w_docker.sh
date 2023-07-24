@@ -9,7 +9,7 @@ NC='\033[0m' # No Color
 
 # Update package list and upgrade installed packages
 echo -e "${GREEN}Updating package list and upgrading installed packages${NC}"
-apt update > /dev/null 2>&1 && sudo apt upgrade -y > /dev/null 2>&1 && sudo apt autoremove -y > /dev/null 2>&1 || { echo -e "${RED}Error: Failed to update and upgrade packages${NC}"; exit 1; }
+apt update > /dev/null 2>&1 && apt upgrade -y > /dev/null 2>&1 && apt autoremove -y > /dev/null 2>&1 || { echo -e "${RED}Error: Failed to update and upgrade packages${NC}"; exit 1; }
 
 # Install sudo and curl packages
 echo -e "${GREEN}Installing sudo and curl packages${NC}"

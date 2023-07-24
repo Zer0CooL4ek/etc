@@ -7,9 +7,9 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Define symbol variables
-CHECKMARK="${GREEN}✔️${NC}"
-CROSS="${RED}❌${NC}"
-MINUS="${YELLOW}➖${NC}"
+CHECKMARK="${GREEN}V${NC}"
+CROSS="${RED}X${NC}"
+MINUS="${YELLOW}-${NC}"
 
 # Function to display progress animation
 progress() {

@@ -53,20 +53,20 @@ kill $PROGRESS_PID
 echo -e "${YELLOW}-= Checking current SSH port and changing it to 2224 if necessary =-${NC}"
 if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
     sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
-    echo -e "${GREEN}SSH port has been changed to 2224${NC}"
+    echo -e "\r${CHECKMARK} SSH port has been changed to 2224"
 else
-    echo -e "${GREEN}SSH port is already set to 2224${NC}"
+    echo -e "\r${CHECKMARK} SSH port is already set to 2224"
 fi
 
 # Modify SSH configuration file to disable password authentication and restart SSH service
 echo -e "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
 if grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
     sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-    echo -e "${YELLOW}PasswordAuthentication has been changed to no${NC}"
+    echo -e "\r${CHECKMARK} PasswordAuthentication has been changed to no"
 else
-    echo -e "${GREEN}PasswordAuthentication is already set to no${NC}"
+    echo -e "\r${CHECKMARK} PasswordAuthentication is already set to no"
 fi
 
 # Restart SSH service
-echo -e "${GREEN}Restarting SSH service${NC}"
-service ssh restart || { echo -e "${RED}Error: Failed to restart SSH service${NC}"; exit 1; }
+echo -e "${YELLOW}Restarting SSH service${NC}"
+service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }

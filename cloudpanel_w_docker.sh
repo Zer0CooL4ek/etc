@@ -44,3 +44,13 @@ sha256sum -c && sudo DB_ENGINE=MARIADB_10.11 bash install.sh
 # -= Adding crontab jobs for daily updates of CloudPanel, system, and Docker Compose (in one command) =-
 echo "-= Adding crontab jobs for daily updates of CloudPanel, system, and Docker Compose (in one command) =-"
 sh -c 'if ! grep -q "clp-update" /etc/crontab; then printf "\n# Update CloudPanel every day at 4 AM\n0 4 * * * root clp-update\n\n# Update system every day at 4:10 AM\n10 4 * * * root apt-get update && apt-get upgrade -y && apt-get autoremove -y\n\n# Update Docker Compose every day at 4:30 AM\n30 4 * * * root curl -L \"https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose\n" >> /etc/crontab; fi'
+
+# -= Checking current SSH port and changing it to 2224 if necessary =-
+echo "-= Checking current SSH port and changing it to 2224 if necessary =-"
+if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
+    sed -i 's/^Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
+    service ssh restart
+    echo "SSH port has been changed to 2224"
+else
+    echo "SSH port is already set to 2224"
+fi

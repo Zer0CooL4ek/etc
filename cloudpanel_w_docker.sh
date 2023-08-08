@@ -99,12 +99,13 @@ fi
 
 # Modify SSH configuration file to disable password authentication and restart SSH service
 echo -e "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
-if grep -q "^PasswordAuthentication yes" /etc/ssh/sshd_config; then
-    sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+if grep -q "^#\?PasswordAuthentication yes" /etc/ssh/sshd_config; then
+    sed -i 's/^#\?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} PasswordAuthentication has been changed to no"
 else
     echo -e "\r${CHECKMARK} PasswordAuthentication is already set to no"
 fi
+
 
 # Restart SSH service
 echo -e "${GREEN}Restarting SSH service${NC}"

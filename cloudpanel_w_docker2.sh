@@ -45,13 +45,6 @@ PROGRESS_PID=$!
 curl -fsSL https://get.docker.com -o get-docker.sh > /dev/null 2>&1 && sudo sh get-docker.sh > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Docker installation script downloaded and executed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to download and execute Docker installation script"; exit 1; }
 kill $PROGRESS_PID
 
-# Add current user to docker group
-echo -e "${GREEN}Adding current user to docker group${NC}"
-progress &
-PROGRESS_PID=$!
-usermod -aG docker $USER > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Current user added to docker group" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to add current user to docker group"; exit 1; }
-kill $PROGRESS_PID
-
 # Download latest version of Docker Compose
 echo -e "${GREEN}Downloading latest version of Docker Compose${NC}"
 progress &

@@ -32,10 +32,10 @@ apt update > /dev/null 2>&1 && apt upgrade -y > /dev/null 2>&1 && apt autoremove
 kill $PROGRESS_PID
 
 # Install sudo and curl packages
-echo -e "${GREEN}Installing sudo and curl packages${NC}"
+echo -e "${GREEN}Installing sudo and curl and htop packages${NC}"
 progress &
 PROGRESS_PID=$!
-apt install sudo curl -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Sudo and curl packages installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install sudo and curl"; exit 1; }
+apt install sudo curl htop -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Sudo and curl packages installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install sudo and curl"; exit 1; }
 kill $PROGRESS_PID
 
 # Clean cache and temporary files
@@ -54,13 +54,21 @@ else
     echo -e "\r${CHECKMARK} SSH port is already set to 2224"
 fi
 
-# Modify SSH configuration file to disable password authentication and restart SSH service
+# Modify SSH configuration file to disable password authentication
 echo -e "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
 if grep -q "^#\?PasswordAuthentication yes" /etc/ssh/sshd_config; then
     sed -i 's/^#\?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} PasswordAuthentication has been changed to no"
 else
     echo -e "\r${CHECKMARK} PasswordAuthentication is already set to no"
+fi
+
+# Set PermitEmptyPasswords to no
+if grep -q "^#\?PermitEmptyPasswords" /etc/ssh/sshd_config; then
+    sed -i 's/^#\?PermitEmptyPasswords .*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
+    echo -e "\r${CHECKMARK} PermitEmptyPasswords has been set to no"
+else
+    echo -e "\r${CHECKMARK} PermitEmptyPasswords is already set to no"
 fi
 
 # Set MaxAuthTries to 3

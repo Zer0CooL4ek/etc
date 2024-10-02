@@ -151,15 +151,19 @@ docker_setup() {
 
 # Menu for choosing the installation option
 echo "Choose installation option:"
-echo "1. Base installation"
-echo "2. Docker installation"
-read -p "Enter your choice (1 or 2): " choice
+echo "Press '1' for base installation"
+echo "Press '2' for Docker installation"
+
+# Read user input without waiting for Enter key
+read -n 1 -s choice
 
 case $choice in
     1)
+        echo -e "\nYou have selected base installation."
         base_setup
         ;;
     2)
+        echo -e "\nYou have selected Docker installation."
         docker_setup
         ;;
     *)

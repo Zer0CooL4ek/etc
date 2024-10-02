@@ -66,3 +66,12 @@ fi
 # Restart SSH service
 echo -e "${GREEN}Restarting SSH service${NC}"
 service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }
+
+# Check if a reboot is required after package updates
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}Reboot is required, rebooting in 10 seconds...${NC}"
+    sleep 10
+    reboot
+else
+    echo -e "${GREEN}No reboot required${NC}"
+fi

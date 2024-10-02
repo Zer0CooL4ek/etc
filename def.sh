@@ -64,6 +64,7 @@ else
 fi
 
 # Set PermitEmptyPasswords to no
+echo -e "${GREEN}Setting PermitEmptyPasswords to no${NC}"
 if grep -q "^#\?PermitEmptyPasswords" /etc/ssh/sshd_config; then
     sed -i 's/^#\?PermitEmptyPasswords .*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} PermitEmptyPasswords has been set to no"
@@ -71,36 +72,60 @@ else
     echo -e "\r${CHECKMARK} PermitEmptyPasswords is already set to no"
 fi
 
-# Set MaxAuthTries to 3
-if grep -q "^#\?MaxAuthTries" /etc/ssh/sshd_config; then
-    sed -i 's/^#\?MaxAuthTries .*/MaxAuthTries 3/' /etc/ssh/sshd_config
+# Check and set MaxAuthTries
+echo -e "${GREEN}Setting MaxAuthTries to 3${NC}"
+if grep -q "^MaxAuthTries" /etc/ssh/sshd_config; then
+    if ! grep -q "^MaxAuthTries 3" /etc/ssh/sshd_config; then
+        sed -i 's/^MaxAuthTries .*/MaxAuthTries 3/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} MaxAuthTries has been set to 3"
+    else
+        echo -e "\r${CHECKMARK} MaxAuthTries is already set to 3"
+    fi
+else
+    echo "MaxAuthTries 3" >> /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} MaxAuthTries has been set to 3"
-else
-    echo -e "\r${CHECKMARK} MaxAuthTries is already set to 3"
 fi
 
-# Set MaxSessions to 2
-if grep -q "^#\?MaxSessions" /etc/ssh/sshd_config; then
-    sed -i 's/^#\?MaxSessions .*/MaxSessions 2/' /etc/ssh/sshd_config
+# Check and set MaxSessions
+echo -e "${GREEN}Setting MaxSessions to 2${NC}"
+if grep -q "^MaxSessions" /etc/ssh/sshd_config; then
+    if ! grep -q "^MaxSessions 2" /etc/ssh/sshd_config; then
+        sed -i 's/^MaxSessions .*/MaxSessions 2/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} MaxSessions has been set to 2"
+    else
+        echo -e "\r${CHECKMARK} MaxSessions is already set to 2"
+    fi
+else
+    echo "MaxSessions 2" >> /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} MaxSessions has been set to 2"
-else
-    echo -e "\r${CHECKMARK} MaxSessions is already set to 2"
 fi
 
-# Set ClientAliveInterval to 300
-if grep -q "^#\?ClientAliveInterval" /etc/ssh/sshd_config; then
-    sed -i 's/^#\?ClientAliveInterval .*/ClientAliveInterval 300/' /etc/ssh/sshd_config
+# Check and set ClientAliveInterval
+echo -e "${GREEN}Setting ClientAliveInterval to 300${NC}"
+if grep -q "^ClientAliveInterval" /etc/ssh/sshd_config; then
+    if ! grep -q "^ClientAliveInterval 300" /etc/ssh/sshd_config; then
+        sed -i 's/^ClientAliveInterval .*/ClientAliveInterval 300/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} ClientAliveInterval has been set to 300"
+    else
+        echo -e "\r${CHECKMARK} ClientAliveInterval is already set to 300"
+    fi
+else
+    echo "ClientAliveInterval 300" >> /etc/ssh/sshd_config
     echo -e "\r${CHECKMARK} ClientAliveInterval has been set to 300"
-else
-    echo -e "\r${CHECKMARK} ClientAliveInterval is already set to 300"
 fi
 
-# Set ClientAliveCountMax to 0
-if grep -q "^#\?ClientAliveCountMax" /etc/ssh/sshd_config; then
-    sed -i 's/^#\?ClientAliveCountMax .*/ClientAliveCountMax 0/' /etc/ssh/sshd_config
-    echo -e "\r${CHECKMARK} ClientAliveCountMax has been set to 0"
+# Check and set ClientAliveCountMax
+echo -e "${GREEN}Setting ClientAliveCountMax to 0${NC}"
+if grep -q "^ClientAliveCountMax" /etc/ssh/sshd_config; then
+    if ! grep -q "^ClientAliveCountMax 0" /etc/ssh/sshd_config; then
+        sed -i 's/^ClientAliveCountMax .*/ClientAliveCountMax 0/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} ClientAliveCountMax has been set to 0"
+    else
+        echo -e "\r${CHECKMARK} ClientAliveCountMax is already set to 0"
+    fi
 else
-    echo -e "\r${CHECKMARK} ClientAliveCountMax is already set to 0"
+    echo "ClientAliveCountMax 0" >> /etc/ssh/sshd_config
+    echo -e "\r${CHECKMARK} ClientAliveCountMax has been set to 0"
 fi
 
 # Restart SSH service

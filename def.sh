@@ -35,7 +35,7 @@ kill $PROGRESS_PID
 echo -e "${GREEN}Installing sudo and curl and htop packages${NC}"
 progress &
 PROGRESS_PID=$!
-apt install sudo curl htop -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Sudo and curl packages installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install sudo and curl"; exit 1; }
+apt install sudo curl htop neofetch -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Sudo and curl packages installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install sudo and curl"; exit 1; }
 kill $PROGRESS_PID
 
 # Clean cache and temporary files
@@ -106,6 +106,15 @@ fi
 # Restart SSH service
 echo -e "${GREEN}Restarting SSH service${NC}"
 service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }
+
+# Add Neofetch to .bashrc for autostart
+echo -e "${GREEN}Adding Neofetch to .bashrc for autostart${NC}"
+if ! grep -q "neofetch" ~/.bashrc; then
+    echo 'neofetch' >> ~/.bashrc
+    echo -e "${CHECKMARK} Neofetch added to .bashrc for autostart"
+else
+    echo -e "${CHECKMARK} Neofetch is already in .bashrc"
+fi
 
 # Check if a reboot is required after package updates
 if [ -f /var/run/reboot-required ]; then

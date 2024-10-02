@@ -63,6 +63,38 @@ else
     echo -e "\r${CHECKMARK} PasswordAuthentication is already set to no"
 fi
 
+# Set MaxAuthTries to 3
+if grep -q "^#\?MaxAuthTries" /etc/ssh/sshd_config; then
+    sed -i 's/^#\?MaxAuthTries .*/MaxAuthTries 3/' /etc/ssh/sshd_config
+    echo -e "\r${CHECKMARK} MaxAuthTries has been set to 3"
+else
+    echo -e "\r${CHECKMARK} MaxAuthTries is already set to 3"
+fi
+
+# Set MaxSessions to 2
+if grep -q "^#\?MaxSessions" /etc/ssh/sshd_config; then
+    sed -i 's/^#\?MaxSessions .*/MaxSessions 2/' /etc/ssh/sshd_config
+    echo -e "\r${CHECKMARK} MaxSessions has been set to 2"
+else
+    echo -e "\r${CHECKMARK} MaxSessions is already set to 2"
+fi
+
+# Set ClientAliveInterval to 300
+if grep -q "^#\?ClientAliveInterval" /etc/ssh/sshd_config; then
+    sed -i 's/^#\?ClientAliveInterval .*/ClientAliveInterval 300/' /etc/ssh/sshd_config
+    echo -e "\r${CHECKMARK} ClientAliveInterval has been set to 300"
+else
+    echo -e "\r${CHECKMARK} ClientAliveInterval is already set to 300"
+fi
+
+# Set ClientAliveCountMax to 0
+if grep -q "^#\?ClientAliveCountMax" /etc/ssh/sshd_config; then
+    sed -i 's/^#\?ClientAliveCountMax .*/ClientAliveCountMax 0/' /etc/ssh/sshd_config
+    echo -e "\r${CHECKMARK} ClientAliveCountMax has been set to 0"
+else
+    echo -e "\r${CHECKMARK} ClientAliveCountMax is already set to 0"
+fi
+
 # Restart SSH service
 echo -e "${GREEN}Restarting SSH service${NC}"
 service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }

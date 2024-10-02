@@ -145,29 +145,37 @@ docker_setup() {
     PROGRESS_PID=$!
     chmod +x /usr/local/bin/docker-compose > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Permissions of Docker Compose file changed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to change permissions of Docker Compose file"; exit 1; }
     kill $PROGRESS_PID
-
-    echo -e "${GREEN}Docker installation completed successfully!${NC}"
 }
 
-# Menu for choosing the installation option
-echo "Choose installation option:"
-echo "Press '1' for base installation"
-echo "Press '2' for Docker installation"
+# Main script
+echo -e "${YELLOW}Choose the setup option:${NC}"
+echo -e "1) Base"
+echo -e "2) Base with Docker"
 
-# Read user input without waiting for Enter key
-read -n 1 -s choice
+# Automatically assign choice without waiting for Enter
+choice=2  # Выберите 1 или 2 по умолчанию
 
-case $choice in
+case "$choice" in
     1)
-        echo -e "\nYou have selected base installation."
+        echo -e "${GREEN}You have selected base setup${NC}"
         base_setup
         ;;
     2)
-        echo -e "\nYou have selected Docker installation."
+        echo -e "${GREEN}You have selected base with Docker setup${NC}"
+        base_setup
         docker_setup
         ;;
     *)
-        echo -e "${CROSS} Invalid choice. Please run the script again and choose 1 or 2.${NC}"
+        echo -e "${RED}Invalid choice, exiting...${NC}"
         exit 1
         ;;
 esac
+
+# Check if a reboot is required after package updates
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}Reboot is required, rebooting in 10 seconds...${NC}"
+    sleep 10
+    reboot
+else
+    echo -e "${GREEN}No reboot required${NC}"
+fi

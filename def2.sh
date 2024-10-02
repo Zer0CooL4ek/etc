@@ -24,10 +24,8 @@ progress() {
     done
 }
 
-# Function for base installation
-base_installation() {
-    echo -e "${GREEN}Performing base installation...${NC}"
-    
+# Function for base setup
+base_setup() {
     # Update package list and upgrade installed packages
     echo -e "${GREEN}Updating package list and upgrading installed packages${NC}"
     progress &
@@ -49,7 +47,66 @@ base_installation() {
     apt clean > /dev/null 2>&1 && rm -rf /tmp/* > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Cache and temporary files cleaned" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to clean cache and temporary files"; exit 1; }
     kill $PROGRESS_PID
 
-    # Add Neofetch to .bashrc for autostart
+    # SSH configuration (не изменяется)
+    echo -e "${GREEN}Checking current SSH port and changing it to 2224 if necessary${NC}"
+    if ! grep -q "^Port 2224" /etc/ssh/sshd_config; then
+        sed -i 's/^#\?Port [0-9]*/Port 2224/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} SSH port has been changed to 2224"
+    else
+        echo -e "\r${CHECKMARK} SSH port is already set to 2224"
+    fi
+
+    echo -e "${GREEN}Modifying SSH configuration file to disable password authentication${NC}"
+    if grep -q "^PasswordAuthentication no" /etc/ssh/sshd_config; then
+        echo -e "\r${CHECKMARK} PasswordAuthentication is already set to no"
+    else
+        sed -i 's/^#\?PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} PasswordAuthentication has been changed to no"
+    fi
+
+    echo -e "${GREEN}Setting PermitEmptyPasswords to no${NC}"
+    if grep -q "^PermitEmptyPasswords no" /etc/ssh/sshd_config; then
+        echo -e "\r${CHECKMARK} PermitEmptyPasswords is already set to no"
+    else
+        sed -i 's/^#\?PermitEmptyPasswords .*/PermitEmptyPasswords no/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} PermitEmptyPasswords has been set to no"
+    fi
+
+    echo -e "${GREEN}Setting MaxAuthTries to 3${NC}"
+    if grep -q "^MaxAuthTries 3" /etc/ssh/sshd_config; then
+        echo -e "\r${CHECKMARK} MaxAuthTries is already set to 3"
+    else
+        sed -i 's/^#\?MaxAuthTries .*/MaxAuthTries 3/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} MaxAuthTries has been set to 3"
+    fi
+
+    echo -e "${GREEN}Setting MaxSessions to 2${NC}"
+    if grep -q "^MaxSessions 2" /etc/ssh/sshd_config; then
+        echo -e "\r${CHECKMARK} MaxSessions is already set to 2"
+    else
+        sed -i 's/^#\?MaxSessions .*/MaxSessions 2/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} MaxSessions has been set to 2"
+    fi
+
+    echo -e "${GREEN}Setting ClientAliveInterval to 300${NC}"
+    if grep -q "^ClientAliveInterval 300" /etc/ssh/sshd_config; then
+        echo -e "\r${CHECKMARK} ClientAliveInterval is already set to 300"
+    else
+        sed -i 's/^#\?ClientAliveInterval .*/ClientAliveInterval 300/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} ClientAliveInterval has been set to 300"
+    fi
+
+    echo -e "${GREEN}Setting ClientAliveCountMax to 0${NC}"
+    if grep -q "^ClientAliveCountMax 0" /etc/ssh/sshd_config; then
+        echo -e "\r${CHECKMARK} ClientAliveCountMax is already set to 0"
+    else
+        sed -i 's/^#\?ClientAliveCountMax .*/ClientAliveCountMax 0/' /etc/ssh/sshd_config
+        echo -e "\r${CHECKMARK} ClientAliveCountMax has been set to 0"
+    fi
+
+    echo -e "${GREEN}Restarting SSH service${NC}"
+    service ssh restart > /dev/null 2>&1 && echo -e "\r${CHECKMARK} SSH service restarted" || { echo -e "\r${CROSS} Error: Failed to restart SSH service"; exit 1; }
+
     echo -e "${GREEN}Adding Neofetch to .bashrc for autostart${NC}"
     if ! grep -q "neofetch" ~/.bashrc; then
         echo 'neofetch' >> ~/.bashrc
@@ -57,21 +114,10 @@ base_installation() {
     else
         echo -e "${CHECKMARK} Neofetch is already in .bashrc"
     fi
-
-    # Check if a reboot is required after package updates
-    if [ -f /var/run/reboot-required ]; then
-        echo -e "${RED}Reboot is required, rebooting in 10 seconds...${NC}"
-        sleep 10
-        reboot
-    else
-        echo -e "${GREEN}No reboot required${NC}"
-    fi
 }
 
-# Function for Docker installation
-docker_installation() {
-    echo -e "${GREEN}Performing Docker installation...${NC}"
-
+# Function to install Docker
+docker_setup() {
     # Download Docker installation script and execute it
     echo -e "${GREEN}Downloading Docker installation script and executing it${NC}"
     progress &
@@ -101,22 +147,33 @@ docker_installation() {
     kill $PROGRESS_PID
 }
 
-# Selection logic
-echo -e "${YELLOW}Select installation type:${NC}"
-echo "1) Base installation"
-echo "2) Base installation with Docker"
+# Main script
+echo -e "${YELLOW}Choose the setup option:${NC}"
+echo -e "1) Base"
+echo -e "2) Base with Docker"
 read -r choice < /dev/tty
 
-case $choice in
+case "$choice" in
     1)
-        base_installation
+        echo -e "${GREEN}You have selected base setup${NC}"
+        base_setup
         ;;
     2)
-        base_installation
-        docker_installation
+        echo -e "${GREEN}You have selected base with Docker setup${NC}"
+        base_setup
+        docker_setup
         ;;
     *)
-        echo -e "${RED}❌ Invalid choice. Exiting...${NC}"
+        echo -e "${RED}Invalid choice, exiting...${NC}"
         exit 1
         ;;
 esac
+
+# Check if a reboot is required after package updates
+if [ -f /var/run/reboot-required ]; then
+    echo -e "${RED}Reboot is required, rebooting in 10 seconds...${NC}"
+    sleep 10
+    reboot
+else
+    echo -e "${GREEN}No reboot required${NC}"
+fi

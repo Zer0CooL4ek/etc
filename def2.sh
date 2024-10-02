@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/def2.sh | bash
+# wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/def2.sh | bash < /dev/tty
 #
 
 # Define color variables

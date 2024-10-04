@@ -40,6 +40,13 @@ base_install() {
     apt install sudo curl htop neofetch -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Sudo, curl, htop, and neofetch packages installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install packages"; exit 1; }
     kill $PROGRESS_PID
 
+    # Install speedtest-cli
+    echo -e "${GREEN}Installing speedtest-cli${NC}"
+    progress &
+    PROGRESS_PID=$!
+    curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | sudo bash > /dev/null 2>&1 && apt install speedtest -y > /dev/null 2>&1 && echo -e "\r${CHECKMARK} Speedtest-cli installed" || { kill $PROGRESS_PID; echo -e "\r${CROSS} Error: Failed to install speedtest-cli"; exit 1; }
+    kill $PROGRESS_PID
+
     # Clean cache and temporary files
     echo -e "${GREEN}Cleaning cache and temporary files${NC}"
     progress &

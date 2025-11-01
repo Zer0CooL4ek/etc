@@ -160,7 +160,8 @@ main() {
     echo "1) Base installation only"
     echo "2) Base installation with Docker"
 
-    read -rp "Enter your choice (1 or 2): " choice
+    # <--- use /dev/tty to force interactive input even in pipe
+    read -rp "Enter your choice (1 or 2): " choice < /dev/tty
 
     update_system
     install_packages

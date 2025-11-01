@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#
+#2
 # wget -qO- https://raw.githubusercontent.com/Zer0CooL4ek/etc/main/def7.sh | bash
 #
 

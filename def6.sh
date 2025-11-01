@@ -34,10 +34,10 @@ apt update > /dev/null 2 > & 1 & & apt upgrade -y > /dev/null 2 > & 1 & & apt au
 kill $PROGRESS_PID
 
 # Install sudo, curl, htop, and neofetch packages
-echo -e "${GREEN}Installing sudo, ufw, curl, htop, and neofetch packages${NC}"
+echo -e "${GREEN}Installing sudo, ca-certificates, ufw, curl, htop, and neofetch packages${NC}"
 progress & 
 PROGRESS_PID = $!
-apt install sudo ufw curl htop neofetch -y > /dev/null 2 > & 1 & & echo -e "\r${CHECKMARK} sudo, ufw, curl, htop, and neofetch packages installed" | | { kill $PROGRESS_PID ; echo -e "\r${CROSS} Error: Failed to install packages" ; exit 1 ; }
+apt install sudo ca-certificates ufw curl htop neofetch -y > /dev/null 2 > & 1 & & echo -e "\r${CHECKMARK} sudo, ca-certificates, ufw, curl, htop, and neofetch packages installed" | | { kill $PROGRESS_PID ; echo -e "\r${CROSS} Error: Failed to install packages" ; exit 1 ; }
 kill $PROGRESS_PID
 
 # Install speedtest-cli

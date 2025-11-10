@@ -2941,41 +2941,181 @@ install_packages() {
 
 extract_domain() {
     local SUBDOMAIN=$1
+    local PSL_CACHE="/tmp/psl_cache.txt"
+    local PSL_AGE_DAYS=30  # Обновлять раз в 30 дней
+    
+    # Remove protocol if present
     SUBDOMAIN=$(echo "$SUBDOMAIN" | sed 's|^https\?://||' | sed 's|/.*||')
-
-    IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
-    local NUM_PARTS=${#PARTS[@]}
-
-    if [ $NUM_PARTS -lt 2 ]; then
-        echo "$SUBDOMAIN"
-        return 0
-    fi
-
-    local last_soa=""
-    local prev_soa=""
-
-    # Перебираем уровни от самого верхнего к самому нижнему
-    for ((i=1; i<=NUM_PARTS; i++)); do
-        local current_domain=""
-        for ((j=NUM_PARTS - i; j<NUM_PARTS; j++)); do
-            if [ -z "$current_domain" ]; then
-                current_domain="${PARTS[$j]}"
-            else
-                current_domain="${current_domain}.${PARTS[$j]}"
-            fi
-        done
-
-        local soa_record
-        soa_record=$(dig +short +time=2 +tries=1 SOA "$current_domain" 2>/dev/null)
-
-        if [ -n "$soa_record" ]; then
-            prev_soa="$last_soa"
-            last_soa="$current_domain"
+    
+    # Проверяем наличие Python
+    if ! command -v python3 >/dev/null 2>&1; then
+        # Критическая ошибка - Python нужен для корректной работы
+        echo "ERROR: Python3 is required but not installed" >&2
+        # Простой fallback только для emergency случаев
+        IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
+        local NUM_PARTS=${#PARTS[@]}
+        if [ $NUM_PARTS -ge 2 ]; then
+            echo "${PARTS[$((NUM_PARTS-2))]}.${PARTS[$((NUM_PARTS-1))]}"
+        else
+            echo "$SUBDOMAIN"
         fi
-    done
+        return 1
+    fi
+    
+    # Используем Python для надёжной обработки
+    local result=$(python3 -c "
+import sys
+import os
+from urllib.request import urlopen
+from urllib.error import URLError
+from datetime import datetime, timedelta
 
-    # Возвращаем зону, где реально есть SOA
-    echo "${last_soa:-$SUBDOMAIN}"
+domain = '$SUBDOMAIN'
+psl_cache = '$PSL_CACHE'
+max_age_days = $PSL_AGE_DAYS
+
+def download_psl():
+    '''Скачивает Public Suffix List'''
+    urls = [
+        'https://publicsuffix.org/list/public_suffix_list.dat',
+        'https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat',
+        'https://cdn.jsdelivr.net/gh/publicsuffix/list@master/public_suffix_list.dat'
+    ]
+    
+    for url in urls:
+        try:
+            response = urlopen(url, timeout=10)
+            data = response.read().decode('utf-8')
+            with open(psl_cache, 'w') as f:
+                f.write(data)
+            return data
+        except:
+            continue
+    
+    return None
+
+def load_psl():
+    '''Загружает PSL из кэша или скачивает'''
+    # Проверяем кэш
+    if os.path.exists(psl_cache):
+        # Проверяем возраст файла
+        mtime = datetime.fromtimestamp(os.path.getmtime(psl_cache))
+        if datetime.now() - mtime < timedelta(days=max_age_days):
+            with open(psl_cache, 'r') as f:
+                return f.read()
+    
+    # Кэш устарел или отсутствует - скачиваем
+    return download_psl()
+
+def parse_psl(psl_data):
+    '''Парсит PSL в список правил'''
+    rules = []
+    for line in psl_data.split('\n'):
+        line = line.strip()
+        # Пропускаем комментарии и пустые строки
+        if line and not line.startswith('//'):
+            rules.append(line)
+    return rules
+
+def find_registrable_domain(domain, rules):
+    '''Находит регистрируемый домен'''
+    parts = domain.lower().split('.')
+    
+    if len(parts) < 2:
+        return domain
+    
+    best_match = None
+    best_len = 0
+    
+    # Ищем самое длинное совпадение
+    for rule in rules:
+        rule_parts = rule.lower().split('.')
+        
+        if len(rule_parts) > len(parts):
+            continue
+        
+        # Проверяем совпадение справа налево
+        match = True
+        for i in range(len(rule_parts)):
+            rule_part = rule_parts[-(i+1)]
+            domain_part = parts[-(i+1)]
+            
+            # Обработка wildcard правил (*.example)
+            if rule_part == '*':
+                continue
+            # Обработка правил-исключений (!www.example)
+            elif rule_part.startswith('!'):
+                # Это исключение - не публичный суффикс
+                exception = rule_part[1:]
+                if exception == domain_part and i == 0:
+                    # Совпадение с исключением
+                    if len(rule_parts) - 1 > best_len:
+                        best_match = rule
+                        best_len = len(rule_parts) - 1
+                    break
+                match = False
+                break
+            elif rule_part != domain_part:
+                match = False
+                break
+        
+        if match and len(rule_parts) > best_len:
+            best_match = rule
+            best_len = len(rule_parts)
+    
+    if best_match:
+        if best_match.startswith('!'):
+            # Исключение - берём на 1 уровень меньше
+            result_parts = parts[-(best_len):]
+        else:
+            # Обычное правило - добавляем 1 уровень
+            if best_len + 1 <= len(parts):
+                result_parts = parts[-(best_len + 1):]
+            else:
+                result_parts = parts
+        
+        return '.'.join(result_parts)
+    
+    # Если не нашли совпадение - берём последние 2 части
+    return '.'.join(parts[-2:]) if len(parts) >= 2 else domain
+
+# Основная логика
+try:
+    psl_data = load_psl()
+    
+    if not psl_data:
+        # Не удалось загрузить PSL - используем простую логику
+        parts = domain.split('.')
+        result = '.'.join(parts[-2:]) if len(parts) >= 2 else domain
+        print(result)
+        sys.exit(0)
+    
+    rules = parse_psl(psl_data)
+    result = find_registrable_domain(domain, rules)
+    print(result)
+
+except Exception as e:
+    # Emergency fallback
+    parts = domain.split('.')
+    result = '.'.join(parts[-2:]) if len(parts) >= 2 else domain
+    print(result)
+    sys.exit(1)
+" 2>/dev/null)
+    
+    if [ -n "$result" ] && [ "$result" != "ERROR:"* ]; then
+        echo "$result"
+        return 0
+    else
+        # Emergency fallback если Python упал
+        IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
+        local NUM_PARTS=${#PARTS[@]}
+        if [ $NUM_PARTS -ge 2 ]; then
+            echo "${PARTS[$((NUM_PARTS-2))]}.${PARTS[$((NUM_PARTS-1))]}"
+        else
+            echo "$SUBDOMAIN"
+        fi
+        return 1
+    fi
 }
 
 check_domain() {

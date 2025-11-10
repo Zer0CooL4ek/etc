@@ -1,10 +1,11 @@
 #!/bin/bash
 
-SCRIPT_VERSION="2.2.2a"
+SCRIPT_VERSION="2.2.2c"
 UPDATE_AVAILABLE=false
+CERT_CERT_TEST_MODE=true
 DIR_REMNAWAVE="/usr/local/remnawave_reverse/"
 LANG_FILE="${DIR_REMNAWAVE}selected_language"
-SCRIPT_URL="https://raw.githubusercontent.com/Zer0CooL4ek/etc/refs/heads/main/temp4.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/eGamesAPI/remnawave-reverse-proxy/refs/heads/main/install_remnawave.sh"
 
 COLOR_RESET="\033[0m"
 COLOR_GREEN="\033[1;32m"
@@ -77,7 +78,7 @@ set_language() {
                 [SUCCESS_INSTALL]="All packages installed successfully"
                 #Menu
                 [MENU_TITLE]="REMNAWAVE REVERSE-PROXY by eGames"
-                [AVAILABLE_UPDATE]="update available"
+				[AVAILABLE_UPDATE]="update available"
                 [VERSION_LABEL]="Version: %s"
                 [EXIT]="Exit"
                 [MENU_1]="Install Remnawave Components"
@@ -454,7 +455,7 @@ set_language() {
                 [ERROR_ROOT]="Скрипт нужно запускать с правами root"
                 [ERROR_OS]="Поддержка только Debian 11/12 и Ubuntu 22.04/24.04"
                 [MENU_TITLE]="REMNAWAVE REVERSE-PROXY by eGames"
-                [AVAILABLE_UPDATE]="доступно обновление"
+				[AVAILABLE_UPDATE]="доступно обновление"
                 [VERSION_LABEL]="Версия: %s"
                 #Install Packages
                 [ERROR_UPDATE_LIST]="Ошибка: Не удалось обновить список пакетов"
@@ -910,7 +911,7 @@ start_panel_node() {
 
     cd "$dir" || { echo -e "${COLOR_RED}${LANG[CHANGE_DIR_FAILED]} $dir${COLOR_RESET}"; exit 1; }
 
-    if docker ps -q --filter "ancestor=remnawave/backend:latest" | grep -q . || docker ps -q --filter "ancestor=remnawave/node:latest" | grep -q .; then
+    if docker ps -q --filter "ancestor=remnawave/backend:latest" | grep -q . || docker ps -q --filter "ancestor=remnawave/node:latest" | grep -q . || docker ps -q --filter "ancestor=remnawave/backend:2" | grep -q .; then
         echo -e "${COLOR_GREEN}${LANG[PANEL_RUNNING]}${COLOR_RESET}"
     else
         echo -e "${COLOR_YELLOW}${LANG[STARTING_PANEL_NODE]}...${COLOR_RESET}"
@@ -931,7 +932,7 @@ stop_panel_node() {
     fi
 
     cd "$dir" || { echo -e "${COLOR_RED}${LANG[CHANGE_DIR_FAILED]} $dir${COLOR_RESET}"; exit 1; }
-    if ! docker ps -q --filter "ancestor=remnawave/backend:latest" | grep -q . && ! docker ps -q --filter "ancestor=remnawave/node:latest" | grep -q .; then
+    if ! docker ps -q --filter "ancestor=remnawave/backend:latest" | grep -q . && ! docker ps -q --filter "ancestor=remnawave/node:latest" | grep -q . && ! docker ps -q --filter "ancestor=remnawave/backend:2" | grep -q .; then
         echo -e "${COLOR_GREEN}${LANG[PANEL_STOPPED]}${COLOR_RESET}"
     else
         echo -e "${COLOR_YELLOW}${LANG[STOPPING_REMNAWAVE]}...${COLOR_RESET}"
@@ -977,7 +978,7 @@ update_panel_node() {
 
     if [ "$before" != "$after" ] || echo "$pull_output" | grep -q "Pull complete"; then
         echo -e ""
-    echo -e "${COLOR_YELLOW}${LANG[IMAGES_DETECTED]}${COLOR_RESET}"
+	echo -e "${COLOR_YELLOW}${LANG[IMAGES_DETECTED]}${COLOR_RESET}"
         docker compose down > /dev/null 2>&1 &
         spinner $! "${LANG[WAITING]}"
         sleep 5
@@ -1229,9 +1230,9 @@ check_update_status() {
 show_menu() {
     echo -e "${COLOR_GREEN}${LANG[MENU_TITLE]}${COLOR_RESET}"
     if [[ "$UPDATE_AVAILABLE" == true ]]; then
-        echo -e "${COLOR_GRAY}$(printf "${LANG[VERSION_LABEL]}" "$SCRIPT_VERSION ${COLOR_RED}${LANG[AVAILABLE_UPDATE]}${COLOR_RESET}")${COLOR_RESET}"
+		echo -e "${COLOR_GRAY}$(printf "${LANG[VERSION_LABEL]}" "$SCRIPT_VERSION ${COLOR_RED}${LANG[AVAILABLE_UPDATE]}${COLOR_RESET}")${COLOR_RESET}"
     else
-        echo -e "${COLOR_GRAY}$(printf "${LANG[VERSION_LABEL]}" "$SCRIPT_VERSION")${COLOR_RESET}"
+		echo -e "${COLOR_GRAY}$(printf "${LANG[VERSION_LABEL]}" "$SCRIPT_VERSION")${COLOR_RESET}"
     fi
     echo -e ""
     echo -e "${COLOR_YELLOW}1. ${LANG[MENU_1]}${COLOR_RESET}" # Install Remnawave Components
@@ -1503,7 +1504,7 @@ view_logs() {
 
     cd "$dir" || { echo -e "${COLOR_RED}${LANG[CHANGE_DIR_FAILED]} $dir${COLOR_RESET}"; exit 1; }
 
-    if ! docker ps -q --filter "ancestor=remnawave/backend:latest" | grep -q . && ! docker ps -q --filter "ancestor=remnawave/node:latest" | grep -q .; then
+    if ! docker ps -q --filter "ancestor=remnawave/backend:latest" | grep -q . && ! docker ps -q --filter "ancestor=remnawave/node:latest" | grep -q . && ! docker ps -q --filter "ancestor=remnawave/backend:2" | grep -q .; then
         echo -e "${COLOR_RED}${LANG[CONTAINER_NOT_RUNNING]}${COLOR_RESET}"
         exit 1
     fi
@@ -1784,8 +1785,8 @@ manage_warp() {
                     "tag": "warp-out",
                     "protocol": "freedom",
                     "settings": {
-                        "domainStrategy": "UseIP"
-                    },
+					    "domainStrategy": "UseIP"
+					},
                     "streamSettings": {
                         "sockopt": {
                             "interface": "warp",
@@ -3292,9 +3293,6 @@ check_api() {
     error "$(printf "${LANG[CF_INVALID]}" "$attempts")"
 }
 
-# Флаг для тестового режима
-CERT_TEST_MODE=true
-
 get_certificates() {
     local DOMAIN=$1
     local CERT_METHOD=$2
@@ -3313,7 +3311,7 @@ get_certificates() {
 
     case $CERT_METHOD in
         1)
-            # Cloudflare API (DNS-01)
+            # Cloudflare API (DNS-01 support wildcard)
             reading "${LANG[ENTER_CF_TOKEN]}" CLOUDFLARE_API_KEY
             reading "${LANG[ENTER_CF_EMAIL]}" CLOUDFLARE_EMAIL
 
@@ -3346,7 +3344,7 @@ EOL
                 $CERT_TEST_FLAG
             ;;
         2)
-            # ACME HTTP-01
+            # ACME HTTP-01 (without wildcard)
             ufw allow 80/tcp comment 'HTTP for ACME challenge' > /dev/null 2>&1
 
             certbot certonly \

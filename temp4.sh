@@ -3293,7 +3293,7 @@ check_api() {
 }
 
 # Флаг для тестового режима
-CERT_CERT_TEST_MODE=true
+CERT_TEST_MODE=true
 
 get_certificates() {
     local DOMAIN=$1
@@ -3306,9 +3306,9 @@ get_certificates() {
 
     # Если включён тестовый режим, добавляем параметр
     local CERT_TEST_FLAG=""
-    if [ "$CERT_CERT_TEST_MODE" = true ]; then
+    if [ "$CERT_TEST_MODE" = true ]; then
         CERT_TEST_FLAG="--dry-run"
-        echo -e "${COLOR_YELLOW}[!] ${LANG[CERT_CERT_TEST_MODE_ENABLED]} — ${LANG[CERT_WILL_NOT_BE_ISSUED]}${COLOR_RESET}"
+        echo -e "${COLOR_YELLOW}[!] ${LANG[CERT_TEST_MODE_ENABLED]} — ${LANG[CERT_WILL_NOT_BE_ISSUED]}${COLOR_RESET}"
     fi
 
     case $CERT_METHOD in
@@ -3369,7 +3369,7 @@ EOL
             ;;
     esac
 
-    if [ "$CERT_CERT_TEST_MODE" = true ]; then
+    if [ "$CERT_TEST_MODE" = true ]; then
         echo -e "${COLOR_GREEN}✔ ${LANG[CERT_TEST_RUN_SUCCESS]}${COLOR_RESET}"
         return 0
     fi

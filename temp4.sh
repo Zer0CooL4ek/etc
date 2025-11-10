@@ -2943,16 +2943,16 @@ install_packages() {
 extract_domain() {
     local SUBDOMAIN=$1
     local PSL_CACHE="/tmp/psl_cache.txt"
-    local PSL_AGE_DAYS=30  # Обновлять раз в 30 дней
+    local PSL_AGE_DAYS=30  # Update every 30 days
     
     # Remove protocol if present
     SUBDOMAIN=$(echo "$SUBDOMAIN" | sed 's|^https\?://||' | sed 's|/.*||')
     
-    # Проверяем наличие Python
+    # Check for Python presence
     if ! command -v python3 >/dev/null 2>&1; then
-        # Критическая ошибка - Python нужен для корректной работы
+        # Critical error - Python is required for proper operation
         echo "ERROR: Python3 is required but not installed" >&2
-        # Простой fallback только для emergency случаев
+        # Simple fallback only for emergency cases
         IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
         local NUM_PARTS=${#PARTS[@]}
         if [ $NUM_PARTS -ge 2 ]; then
@@ -2963,7 +2963,7 @@ extract_domain() {
         return 1
     fi
     
-    # Используем Python для надёжной обработки
+    # Use Python for reliable processing
     local result=$(python3 -c "
 import sys
 import os
@@ -2976,7 +2976,7 @@ psl_cache = '$PSL_CACHE'
 max_age_days = $PSL_AGE_DAYS
 
 def download_psl():
-    '''Скачивает Public Suffix List'''
+    '''Downloads the Public Suffix List'''
     urls = [
         'https://publicsuffix.org/list/public_suffix_list.dat',
         'https://raw.githubusercontent.com/publicsuffix/list/master/public_suffix_list.dat',
@@ -2996,30 +2996,30 @@ def download_psl():
     return None
 
 def load_psl():
-    '''Загружает PSL из кэша или скачивает'''
-    # Проверяем кэш
+    '''Loads PSL from cache or downloads it'''
+    # Check cache
     if os.path.exists(psl_cache):
-        # Проверяем возраст файла
+        # Check file age
         mtime = datetime.fromtimestamp(os.path.getmtime(psl_cache))
         if datetime.now() - mtime < timedelta(days=max_age_days):
             with open(psl_cache, 'r') as f:
                 return f.read()
     
-    # Кэш устарел или отсутствует - скачиваем
+    # Cache is outdated or missing - download
     return download_psl()
 
 def parse_psl(psl_data):
-    '''Парсит PSL в список правил'''
+    '''Parses PSL into a list of rules'''
     rules = []
     for line in psl_data.split('\n'):
         line = line.strip()
-        # Пропускаем комментарии и пустые строки
+        # Skip comments and empty lines
         if line and not line.startswith('//'):
             rules.append(line)
     return rules
 
 def find_registrable_domain(domain, rules):
-    '''Находит регистрируемый домен'''
+    '''Finds the registrable domain'''
     parts = domain.lower().split('.')
     
     if len(parts) < 2:
@@ -3028,28 +3028,28 @@ def find_registrable_domain(domain, rules):
     best_match = None
     best_len = 0
     
-    # Ищем самое длинное совпадение
+    # Find the longest match
     for rule in rules:
         rule_parts = rule.lower().split('.')
         
         if len(rule_parts) > len(parts):
             continue
         
-        # Проверяем совпадение справа налево
+        # Check match from right to left
         match = True
         for i in range(len(rule_parts)):
             rule_part = rule_parts[-(i+1)]
             domain_part = parts[-(i+1)]
             
-            # Обработка wildcard правил (*.example)
+            # Handle wildcard rules (*.example)
             if rule_part == '*':
                 continue
-            # Обработка правил-исключений (!www.example)
+            # Handle exception rules (!www.example)
             elif rule_part.startswith('!'):
-                # Это исключение - не публичный суффикс
+                # This is an exception - not a public suffix
                 exception = rule_part[1:]
                 if exception == domain_part and i == 0:
-                    # Совпадение с исключением
+                    # Match with exception
                     if len(rule_parts) - 1 > best_len:
                         best_match = rule
                         best_len = len(rule_parts) - 1
@@ -3066,10 +3066,10 @@ def find_registrable_domain(domain, rules):
     
     if best_match:
         if best_match.startswith('!'):
-            # Исключение - берём на 1 уровень меньше
+            # Exception - take one level less
             result_parts = parts[-(best_len):]
         else:
-            # Обычное правило - добавляем 1 уровень
+            # Regular rule - add one more level
             if best_len + 1 <= len(parts):
                 result_parts = parts[-(best_len + 1):]
             else:
@@ -3077,15 +3077,15 @@ def find_registrable_domain(domain, rules):
         
         return '.'.join(result_parts)
     
-    # Если не нашли совпадение - берём последние 2 части
+    # If no match found - take last 2 parts
     return '.'.join(parts[-2:]) if len(parts) >= 2 else domain
 
-# Основная логика
+# Main logic
 try:
     psl_data = load_psl()
     
     if not psl_data:
-        # Не удалось загрузить PSL - используем простую логику
+        # Failed to load PSL - use simple logic
         parts = domain.split('.')
         result = '.'.join(parts[-2:]) if len(parts) >= 2 else domain
         print(result)
@@ -3107,7 +3107,7 @@ except Exception as e:
         echo "$result"
         return 0
     else
-        # Emergency fallback если Python упал
+        # Emergency fallback if Python failed
         IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
         local NUM_PARTS=${#PARTS[@]}
         if [ $NUM_PARTS -ge 2 ]; then

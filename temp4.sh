@@ -2945,18 +2945,6 @@ extract_domain() {
     # Remove protocol if present
     SUBDOMAIN=$(echo "$SUBDOMAIN" | sed 's|^https\?://||' | sed 's|/.*||')
     
-    # Проверяем наличие dig
-    if ! command -v dig >/dev/null 2>&1; then
-        IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
-        local NUM_PARTS=${#PARTS[@]}
-        if [ $NUM_PARTS -ge 2 ]; then
-            echo "${PARTS[$((NUM_PARTS-2))]}.${PARTS[$((NUM_PARTS-1))]}"
-        else
-            echo "$SUBDOMAIN"
-        fi
-        return 0
-    fi
-    
     # Разбиваем домен на части
     IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
     local NUM_PARTS=${#PARTS[@]}
@@ -2966,44 +2954,54 @@ extract_domain() {
         return 0
     fi
     
-    # Ищем домен с SOA записью (от длинного к короткому)
-    local found_domain=""
-    
+    # Проверяем от 2 частей до полной длины
+    # Находим уровень, где ЕСТЬ SOA, но у следующего уровня SOA НЕТ
     for ((i=2; i<=NUM_PARTS; i++)); do
-        local test_domain=""
+        # Текущий тестовый домен
+        local current_domain=""
         for ((j=NUM_PARTS-i; j<NUM_PARTS; j++)); do
-            if [ -z "$test_domain" ]; then
-                test_domain="${PARTS[$j]}"
+            if [ -z "$current_domain" ]; then
+                current_domain="${PARTS[$j]}"
             else
-                test_domain="${test_domain}.${PARTS[$j]}"
+                current_domain="${current_domain}.${PARTS[$j]}"
             fi
         done
         
-        # Проверяем SOA
-        local soa_result=$(dig +short +time=2 +tries=1 SOA "$test_domain" 2>/dev/null | head -n 1)
+        # Проверяем текущий уровень
+        local current_soa=$(dig +short +time=2 +tries=1 SOA "$current_domain" 2>/dev/null)
         
-        if [ -n "$soa_result" ]; then
-            # Проверяем NS записи
-            local ns_result=$(dig +short +time=2 +tries=1 NS "$test_domain" 2>/dev/null | head -n 1)
+        if [ -n "$current_soa" ]; then
+            # У текущего есть SOA
             
-            if [ -n "$ns_result" ]; then
-                # Это зона или домен?
-                if echo "$ns_result" | grep -qiE '\.(nic|dns)\.(ru|com|net|org)\.?$'; then
-                    # Похоже на зону
-                    continue
-                fi
+            # Проверяем следующий уровень (если есть)
+            if [ $((i+1)) -le $NUM_PARTS ]; then
+                local next_domain=""
+                for ((k=NUM_PARTS-i-1; k<NUM_PARTS; k++)); do
+                    if [ -z "$next_domain" ]; then
+                        next_domain="${PARTS[$k]}"
+                    else
+                        next_domain="${next_domain}.${PARTS[$k]}"
+                    fi
+                done
                 
-                # Нашли домен!
-                found_domain="$test_domain"
-                break
+                local next_soa=$(dig +short +time=2 +tries=1 SOA "$next_domain" 2>/dev/null)
+                
+                if [ -z "$next_soa" ]; then
+                    # Следующий уровень НЕ имеет SOA = это поддомен
+                    # Значит текущий уровень - это базовый домен
+                    echo "$current_domain"
+                    return 0
+                fi
+            else
+                # Это самый длинный уровень и у него есть SOA
+                echo "$current_domain"
+                return 0
             fi
         fi
     done
     
-    if [ -n "$found_domain" ]; then
-        echo "$found_domain"
-        return 0
-    fi
+    # Если дошли сюда - возвращаем исходный домен
+    echo "$SUBDOMAIN"
 }
 
 check_domain() {

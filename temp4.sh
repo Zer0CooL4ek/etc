@@ -2941,67 +2941,41 @@ install_packages() {
 
 extract_domain() {
     local SUBDOMAIN=$1
-    
-    # Remove protocol if present
     SUBDOMAIN=$(echo "$SUBDOMAIN" | sed 's|^https\?://||' | sed 's|/.*||')
-    
-    # Разбиваем домен на части
+
     IFS='.' read -ra PARTS <<< "$SUBDOMAIN"
     local NUM_PARTS=${#PARTS[@]}
-    
+
     if [ $NUM_PARTS -lt 2 ]; then
         echo "$SUBDOMAIN"
         return 0
     fi
-    
-    # Проверяем от 2 частей до полной длины
-    # Находим уровень, где ЕСТЬ SOA, но у следующего уровня SOA НЕТ
-    for ((i=2; i<=NUM_PARTS; i++)); do
-        # Текущий тестовый домен
+
+    local last_soa=""
+    local prev_soa=""
+
+    # Перебираем уровни от самого верхнего к самому нижнему
+    for ((i=1; i<=NUM_PARTS; i++)); do
         local current_domain=""
-        for ((j=NUM_PARTS-i; j<NUM_PARTS; j++)); do
+        for ((j=NUM_PARTS - i; j<NUM_PARTS; j++)); do
             if [ -z "$current_domain" ]; then
                 current_domain="${PARTS[$j]}"
             else
                 current_domain="${current_domain}.${PARTS[$j]}"
             fi
         done
-        
-        # Проверяем текущий уровень
-        local current_soa=$(dig +short +time=2 +tries=1 SOA "$current_domain" 2>/dev/null)
-        
-        if [ -n "$current_soa" ]; then
-            # У текущего есть SOA
-            
-            # Проверяем следующий уровень (если есть)
-            if [ $((i+1)) -le $NUM_PARTS ]; then
-                local next_domain=""
-                for ((k=NUM_PARTS-i-1; k<NUM_PARTS; k++)); do
-                    if [ -z "$next_domain" ]; then
-                        next_domain="${PARTS[$k]}"
-                    else
-                        next_domain="${next_domain}.${PARTS[$k]}"
-                    fi
-                done
-                
-                local next_soa=$(dig +short +time=2 +tries=1 SOA "$next_domain" 2>/dev/null)
-                
-                if [ -z "$next_soa" ]; then
-                    # Следующий уровень НЕ имеет SOA = это поддомен
-                    # Значит текущий уровень - это базовый домен
-                    echo "$current_domain"
-                    return 0
-                fi
-            else
-                # Это самый длинный уровень и у него есть SOA
-                echo "$current_domain"
-                return 0
-            fi
+
+        local soa_record
+        soa_record=$(dig +short +time=2 +tries=1 SOA "$current_domain" 2>/dev/null)
+
+        if [ -n "$soa_record" ]; then
+            prev_soa="$last_soa"
+            last_soa="$current_domain"
         fi
     done
-    
-    # Если дошли сюда - возвращаем исходный домен
-    echo "$SUBDOMAIN"
+
+    # Возвращаем зону, где реально есть SOA
+    echo "${last_soa:-$SUBDOMAIN}"
 }
 
 check_domain() {

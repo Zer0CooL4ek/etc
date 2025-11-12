@@ -3302,7 +3302,7 @@ get_certificates() {
 
     printf "${COLOR_YELLOW}${LANG[GENERATING_CERTS]}${COLOR_RESET}\n" "$DOMAIN"
 
-    # Если включён тестовый режим, добавляем параметр
+    # If certificate test mode is enabled, add the parameter
     local CERT_TEST_FLAG=""
     if [ "$CERT_TEST_MODE" = true ]; then
         CERT_TEST_FLAG="--dry-run"

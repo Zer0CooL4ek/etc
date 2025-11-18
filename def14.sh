@@ -134,7 +134,7 @@ main() {
     echo "1) Base installation only"
     echo "2) Base installation with Docker"
 
-    read -rp "Enter your choice (1 or 2): " choice < /dev/tty
+    read -rp "Enter your choice (1 or 2): " choice
 
     update_system
     install_packages
